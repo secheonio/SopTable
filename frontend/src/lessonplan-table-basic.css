@@ -1,0 +1,32 @@
+/* 수업계획서표-기본스타일 (lessonplan-table-basic) */
+.lessonplan-table-basic {
+  width: 160mm;
+  min-width: 160mm;
+  max-width: 160mm;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #205080;
+  font-size: 11pt;
+}
+.lessonplan-table-basic td, .lessonplan-table-basic th {
+  border: 1px solid #cce4ff;
+  padding: 0;
+  min-width: 0;
+  text-align: center;
+  vertical-align: middle;
+  /* height: auto; // 기본값이므로 생략 */
+}
+.lessonplan-table-basic textarea, .lessonplan-table-basic input[type="text"] {
+  width: 99%;
+  border: none;
+  outline: none;
+  font-size: 11pt;
+  background: transparent;
+  padding: 2px;
+  box-sizing: border-box;
+  text-align: center;
+  vertical-align: middle;
+  resize: none;
+}

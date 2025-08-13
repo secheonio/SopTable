@@ -1,0 +1,34 @@
+{
+  "student": {
+    "student": { "read": true, "write": true, "delete": true },
+    "grade": { "read": true, "write": true },
+    "teacher": { "read": false, "write": false },
+    "excel": { "upload": false, "download": false },
+    "setting": { "config": false },
+    "info": { "read": true }
+  },
+  "professor": {
+    "student": { "read": true, "write": true, "delete": false },
+    "grade": { "read": true, "write": false },
+    "teacher": { "read": false, "write": false },
+    "excel": { "upload": true, "download": true },
+    "setting": { "config": false },
+    "info": { "read": true }
+  },
+  "admin": {
+    "student": { "read": true, "write": true, "delete": true },
+    "grade": { "read": true, "write": true },
+    "teacher": { "read": true, "write": true, "delete": true },
+    "excel": { "upload": true, "download": true },
+    "setting": { "config": true },
+    "info": { "read": true }
+  },
+  "subadmin": {
+    "student": { "read": true, "write": true, "delete": false },
+    "grade": { "read": true, "write": true },
+    "teacher": { "read": true, "write": false, "delete": false },
+    "excel": { "upload": true, "download": true },
+    "setting": { "config": false },
+    "info": { "read": true }
+  }
+}
