@@ -1,26 +1,281 @@
 ﻿
 
-StatusCode        : 200
+StatusCode        : 20
+                    0
 StatusDescription : OK
-Content           : [{"id":1,"username":"admin","name":"관리자","email":"admin@e
-                    xample.com","role":"admin","created_at":"2025-08-11T07:04
-                    :55.000Z"},{"id":2,"username":"student1","name":"홍길순","em
-                    ail":"student1@example.com","...
-RawContent        : HTTP/1.1 200 OK
-                    Access-Control-Allow-Origin: *
-                    Connection: keep-alive
-                    Keep-Alive: timeout=5
-                    Content-Length: 675
-                    Content-Type: application/json; charset=utf-8
-                    Date: Mon, 11 Aug 2025 09:11:34 GMT...
+Content           : [{
+                    "i
+                    d"
+                    :1
+                    ,"
+                    na
+                    me
+                    ":
+                    "관
+                    리자
+                    ",
+                    "e
+                    ma
+                    il
+                    ":
+                    "a
+                    dm
+                    in
+                    @e
+                    xa
+                    mp
+                    le
+                    .c
+                    om
+                    ",
+                    "p
+                    as
+                    sw
+                    or
+                    d"
+                    :"
+                    ad
+                    mi
+                    np
+                    w"
+                    ,"
+                    ro
+                    le
+                    ":
+                    "a
+                    dm
+                    in
+                    ",
+                    "l
+                    ev
+                    el
+                    ":
+                    ""
+                    ,"
+                    gr
+                    ad
+                    e"
+                    :"
+                    ",
+                    "c
+                    la
+                    ss
+                    ":
+                    ""
+                    ,"
+                    nu
+                    mb
+                    er
+                    ":
+                    ""
+                    ,"
+                    ph
+                    on
+                    e"
+                    :"
+                    ",
+                    "s
+                    ub
+                    je
+                    ct
+                    ":
+                    ""
+                    ,"
+                    po
+                    si
+                    ti
+                    on
+                    ":
+                    ""
+                    ,"
+                    de
+                    pa
+                    rt
+                    me
+                    nt
+                    ":
+                    ""
+                    ,"
+                    co
+                    ur
+                    se
+                    ":
+                    ""
+                    ,"
+                    cr
+                    ..
+                    .
+RawContent        : HT
+                    TP
+                    /1
+                    .1
+                     2
+                    00
+                     O
+                    K
+                    Ac
+                    ce
+                    ss
+                    -C
+                    on
+                    tr
+                    ol
+                    -A
+                    ll
+                    ow
+                    -O
+                    ri
+                    gi
+                    n:
+                     *
+                    Co
+                    nn
+                    ec
+                    ti
+                    on
+                    : 
+                    ke
+                    ep
+                    -a
+                    li
+                    ve
+                    Ke
+                    ep
+                    -A
+                    li
+                    ve
+                    : 
+                    ti
+                    me
+                    ou
+                    t=
+                    5
+                    Co
+                    nt
+                    en
+                    t-
+                    Le
+                    ng
+                    th
+                    : 
+                    18
+                    59
+                    Co
+                    nt
+                    en
+                    t-
+                    Ty
+                    pe
+                    : 
+                    ap
+                    pl
+                    ic
+                    at
+                    io
+                    n/
+                    js
+                    on
+                    ; 
+                    ch
+                    ar
+                    se
+                    t=
+                    ut
+                    f-
+                    8
+                    Da
+                    te
+                    : 
+                    Th
+                    u,
+                     1
+                    4 
+                    Au
+                    g 
+                    20
+                    25
+                     0
+                    1:
+                    24
+                    :5
+                    7 
+                    GM
+                    T.
+                    ..
 Forms             : {}
-Headers           : {[Access-Control-Allow-Origin, *], [Connection, keep-aliv
-                    e], [Keep-Alive, timeout=5], [Content-Length, 675]...}
+Headers           : {[
+                    Ac
+                    ce
+                    ss
+                    -C
+                    on
+                    tr
+                    ol
+                    -A
+                    ll
+                    ow
+                    -O
+                    ri
+                    gi
+                    n,
+                     *
+                    ],
+                     [
+                    Co
+                    nn
+                    ec
+                    ti
+                    on
+                    , 
+                    ke
+                    ep
+                    -a
+                    li
+                    ve
+                    ],
+                     [
+                    Ke
+                    ep
+                    -A
+                    li
+                    ve
+                    , 
+                    ti
+                    me
+                    ou
+                    t=
+                    5]
+                    , 
+                    [C
+                    on
+                    te
+                    nt
+                    -L
+                    en
+                    gt
+                    h,
+                     1
+                    85
+                    9]
+                    ..
+                    .}
 Images            : {}
 InputFields       : {}
 Links             : {}
-ParsedHtml        : mshtml.HTMLDocumentClass
-RawContentLength  : 675
+ParsedHtml        : ms
+                    ht
+                    ml
+                    .H
+                    TM
+                    LD
+                    oc
+                    um
+                    en
+                    tC
+                    la
+                    ss
+RawContentLength  : 18
+                    59
 
 
 
