@@ -3,11 +3,13 @@ import axios from 'axios';
 
 function UserManage() {
 
-       // 모든 상태 선언을 최상단에 위치
+	// 모든 상태 선언을 최상단에 위치
 	// tab: 'student' | 'teacher' | 'all'
 	const [tab, setTab] = useState('student');
-       const [users, setUsers] = useState([]);
-       const [editedRows, setEditedRows] = useState({});
+	const [users, setUsers] = useState([]);
+	const [editedRows, setEditedRows] = useState({});
+	// 신규등록 시 id 자동 부여용 임시 id
+	const [nextTempId, setNextTempId] = useState(-1);
 
        // 학생/교사 데이터 로드 (탭 변경 시)
        React.useEffect(() => {
@@ -55,6 +57,19 @@ function UserManage() {
 		}
 	};
 
+
+       // 신규등록 버튼 클릭 핸들러
+       const handleAddRow = () => {
+	       // 현재 users의 id 중 최대값(숫자) + 1 또는 음수 temp id 사용
+	       let newId = nextTempId;
+	       setNextTempId(id => id - 1);
+	       // role은 현재 탭에 따라 자동 지정
+	       let role = tab === 'student' ? 'student' : (tab === 'teacher' ? 'teacher' : 'student');
+	       setUsers(users => ([
+		       ...users,
+		       { id: newId, name: '', userid: '', role, subject: '', position: '', department: '', course: '', phone: '', created_at: '' }
+	       ]));
+       };
 
        // 관리 유형별 컬럼 정의
        let columns;
@@ -159,8 +174,11 @@ function UserManage() {
 				       >전체관리</button>
 			       </div>
 			       {/* 오른쪽: 신규등록/저장/엑셀 버튼 */}
-			       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-				       <button style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 8, cursor: 'pointer' }}>신규등록</button>
+		       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+		       <button 
+			       style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 8, cursor: 'pointer' }}
+			       onClick={handleAddRow}
+		       >신규등록</button>
 				       <button style={{ background: '#388e3c', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 24, cursor: 'pointer' }}>저장</button>
 				       <button style={{ background: '#e6f0ff', color: '#205080', border: '1px solid #1976d2', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 8, cursor: 'pointer' }}>엑셀로 업로드</button>
 				       <button style={{ background: '#fffbe6', color: '#b8860b', border: '1px solid #e2c04a', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', cursor: 'pointer' }}>엑셀로 내보내기</button>
@@ -197,16 +215,16 @@ function UserManage() {
 								       </td>
 							       ))}
 							       <td style={{border: '1px solid #ccc', padding: 8}}>
-				       <button
-					       disabled={
-						       !editedRows[userIndex] || !user.id ||
-						       !user.name || !user.userid
-					       }
-					       onClick={() => handleSave(user, userIndex)}
-					       style={{ color: '#1976d2', border: '1px solid #1976d2', background: '#fff', borderRadius: 4, padding: '2px 10px', cursor: (editedRows[userIndex] && user.id && user.name && user.userid) ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-				       >
-					       저장
-				       </button>
+					<button
+						disabled={
+							 !editedRows[userIndex] || !user.id ||
+							 !user.name || !user.userid
+						}
+						onClick={() => handleSave(user, userIndex)}
+						style={{ color: '#1976d2', border: '1px solid #1976d2', background: '#fff', borderRadius: 4, padding: '2px 10px', cursor: (editedRows[userIndex] && user.id && user.name && user.userid) ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
+					>
+						수정
+					</button>
 							       </td>
 							       <td style={{border: '1px solid #ccc', padding: 8}}>
 								       <button
