@@ -40,10 +40,14 @@ const PORT = 4000;
 
 
 // 5. 미들웨어/라우트 선언
+// 업로드 폴더 정적 제공
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(cors());
 app.use(express.json());
 app.use('/api/survey-title', require('./surveyTitleRoute'));
+// 파일 업로드 라우트 등록
+app.use('/api/upload', require('./uploadRoute'));
 app.use('/api/plan-title', require('./planTitleRoute'));
 app.use('/api/timetable-title', require('./timetableTitleRoute'));
 app.use('/api/enroll-title', require('./enrollTitleRoute'));
