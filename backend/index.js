@@ -47,6 +47,9 @@ app.use('/api/plan-title', require('./planTitleRoute'));
 app.use('/api/timetable-title', require('./timetableTitleRoute'));
 app.use('/api/enroll-title', require('./enrollTitleRoute'));
 app.use('/api/record-title', require('./recordTitleRoute'));
+// batchUpsertRoute 등록
+const batchUpsertRoute = require('./batchUpsertRoute');
+batchUpsertRoute(app, pool);
 
 /**
  * @swagger

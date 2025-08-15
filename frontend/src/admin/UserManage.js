@@ -1,9 +1,116 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 
 function UserManage() {
-	const [tab, setTab] = useState('student');
+	// 엑셀 업로드 핸들러
+	const [excelLoading, setExcelLoading] = useState(false);
+	const fileInputRef = useRef();
+	const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+	const handleExcelUpload = (e) => {
+		const file = e.target.files[0];
+		// input 리셋 (동일 파일 연속 업로드 가능)
+		if (fileInputRef.current) fileInputRef.current.value = '';
+		if (!file) return;
+		// 확장자/용량 체크
+		const ext = file.name.split('.').pop().toLowerCase();
+		if (!['xlsx', 'xls'].includes(ext)) {
+			alert('엑셀 파일(xlsx, xls)만 업로드 가능합니다.');
+			return;
+		}
+		if (file.size > MAX_FILE_SIZE) {
+			alert('파일 용량이 너무 큽니다. (최대 5MB)');
+			return;
+		}
+		setExcelLoading(true);
+		try {
+			const reader = new FileReader();
+			reader.onload = async (evt) => {
+				try {
+					const data = new Uint8Array(evt.target.result);
+					const workbook = XLSX.read(data, { type: 'array' });
+					const sheet = workbook.Sheets[workbook.SheetNames[0]];
+					const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+					if (!rows || rows.length < 2) {
+						alert('엑셀 데이터가 비어있습니다.');
+						setExcelLoading(false);
+						return;
+					}
+					const header = rows[0];
+					const body = rows.slice(1);
+					// label->key 매핑
+					const labelToKey = {};
+					columns.forEach(col => {
+						const idx = header.indexOf(col.label);
+						if (idx !== -1) labelToKey[idx] = col.key;
+					});
+					const newUsers = body.map(row => {
+						const u = {};
+						Object.entries(labelToKey).forEach(([colIdx, key]) => {
+							u[key] = row[colIdx] ?? '';
+						});
+						return u;
+					});
+					setUsers(users => {
+						// 이름+이메일 모두 같은 경우만 덮어쓰기, 하나라도 다르면 새로 추가
+						const updated = [...users];
+						const upsertList = [];
+						newUsers.forEach(newUser => {
+							const idx = updated.findIndex(u => u.name === newUser.name && u.email === newUser.email);
+							if (idx !== -1) {
+								// 이름+이메일 모두 같으면 덮어쓰기
+								updated[idx] = { ...updated[idx], ...newUser };
+								upsertList.push({ ...updated[idx] });
+							} else {
+								// 하나라도 다르면 새로 추가
+								updated.push(newUser);
+								upsertList.push({ ...newUser });
+							}
+						});
+						// DB에 업서트 요청
+						if (upsertList.length > 0) {
+							axios.post('http://localhost:4000/api/users/batch-upsert', { users: upsertList })
+								.then(() => {
+									alert('엑셀 데이터가 DB에 저장되었습니다.');
+								})
+								.catch(err => {
+									alert('DB 저장 중 오류 발생: ' + (err?.response?.data?.message || err.message || err));
+									console.error('엑셀 업로드 DB 저장 오류:', err);
+								});
+						} else {
+							alert('엑셀 데이터가 반영되었으나, 저장할 데이터가 없습니다.');
+						}
+						return updated;
+					});
+				} catch (err) {
+					alert('엑셀 파일 처리 중 오류 발생: ' + (err.message || err));
+					console.error('엑셀 업로드 오류:', err);
+				} finally {
+					setExcelLoading(false);
+				}
+			};
+			reader.onerror = (err) => {
+				alert('파일 읽기 오류: ' + (err.message || err));
+				setExcelLoading(false);
+			};
+			reader.readAsArrayBuffer(file);
+		} catch (err) {
+			alert('엑셀 업로드 처리 중 오류: ' + (err.message || err));
+			setExcelLoading(false);
+		}
+	};
+
+	// 엑셀로 내보내기
+	const handleExportExcel = () => {
+		const headers = columns.map(col => col.label);
+		const data = users.map(u => columns.map(col => u[col.key] ?? ''));
+		const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, '회원목록');
+		XLSX.writeFile(wb, '회원목록.xlsx');
+	};
+		const [tab, setTab] = useState('all');
 	const [users, setUsers] = useState([]);
 	const [editingRows, setEditingRows] = useState({});
 	const [savedRows, setSavedRows] = useState({});
@@ -120,56 +227,39 @@ function UserManage() {
 			<h3 style={{ margin: '32px 0 16px 0', color: '#205080', fontWeight: 'bold', fontSize: '1.25rem' }}>회원 관리</h3>
 			<div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
 				{/* 왼쪽: 관리 유형 버튼 */}
-				<div>
-					<button
-						onClick={() => setTab('student')}
-						style={{
-							fontWeight: tab === 'student' ? 'bold' : 'normal',
-							background: tab === 'student' ? '#e6f0ff' : '#fff',
-							color: tab === 'student' ? '#205080' : '#222',
-							border: '1px solid #1976d2',
-							borderRadius: 6,
-							padding: '6px 18px',
-							marginRight: 8,
-							cursor: 'pointer',
-						}}
-					>학생관리</button>
-					<button
-						onClick={() => setTab('teacher')}
-						style={{
-							fontWeight: tab === 'teacher' ? 'bold' : 'normal',
-							background: tab === 'teacher' ? '#e6f0ff' : '#fff',
-							color: tab === 'teacher' ? '#205080' : '#222',
-							border: '1px solid #1976d2',
-							borderRadius: 6,
-							padding: '6px 18px',
-							marginRight: 8,
-							cursor: 'pointer',
-						}}
-					>교사관리</button>
-					<button
-						onClick={() => setTab('all')}
-						style={{
-							fontWeight: tab === 'all' ? 'bold' : 'normal',
-							background: tab === 'all' ? '#e6f0ff' : '#fff',
-							color: tab === 'all' ? '#205080' : '#222',
-							border: '1px solid #1976d2',
-							borderRadius: 6,
-							padding: '6px 18px',
-							cursor: 'pointer',
-						}}
-					>전체관리</button>
-				</div>
+				   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+					   <button
+						   onClick={() => setTab('all')}
+						   style={{
+							   fontWeight: tab === 'all' ? 'bold' : 'normal',
+							   background: tab === 'all' ? '#e6f0ff' : '#fff',
+							   color: tab === 'all' ? '#205080' : '#222',
+							   border: '1px solid #1976d2',
+							   borderRadius: 6,
+							   padding: '6px 18px',
+							   cursor: 'pointer',
+						   }}
+					   >전체관리</button>
+					   <button
+						   style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', cursor: 'pointer' }}
+						   onClick={handleAddRow}
+					   >신규등록</button>
+				   </div>
 				{/* 오른쪽: 신규등록/저장/엑셀 버튼 */}
-				<div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-					<button
-						style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 8, cursor: 'pointer' }}
-						onClick={handleAddRow}
-					>신규등록</button>
-					<button style={{ background: '#388e3c', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 24, cursor: 'pointer' }}>저장</button>
-					<button style={{ background: '#e6f0ff', color: '#205080', border: '1px solid #1976d2', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 8, cursor: 'pointer' }}>엑셀로 업로드</button>
-					<button style={{ background: '#fffbe6', color: '#b8860b', border: '1px solid #e2c04a', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', cursor: 'pointer' }}>엑셀로 내보내기</button>
-				</div>
+				   <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+					   <label style={{ background: '#e6f0ff', color: '#205080', border: '1px solid #1976d2', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 8, cursor: excelLoading ? 'wait' : 'pointer', display: 'inline-block', opacity: excelLoading ? 0.6 : 1 }}>
+						   {excelLoading ? '업로드 중...' : '엑셀에서 업로드'}
+						   <input
+							   type="file"
+							   accept=".xlsx,.xls"
+							   style={{ display: 'none' }}
+							   onChange={excelLoading ? undefined : handleExcelUpload}
+							   disabled={excelLoading}
+							   ref={fileInputRef}
+						   />
+					   </label>
+					   <button style={{ background: '#fffbe6', color: '#b8860b', border: '1px solid #e2c04a', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', cursor: 'pointer' }} onClick={handleExportExcel}>엑셀로 내보내기</button>
+				   </div>
 			</div>
 			<div style={{ width: '100%' }}>
 				<table style={{ borderCollapse: 'collapse', width: '100%', maxWidth: '100vw', tableLayout: tab === 'all' ? 'fixed' : 'auto' }}>
