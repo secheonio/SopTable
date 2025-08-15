@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
+import CurriculumManage from './curriculum/CurriculumManage';
 
 function UserManage() {
     // 상태 및 참조

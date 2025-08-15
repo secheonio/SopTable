@@ -5,7 +5,7 @@ import React, { useState, useEffect, createContext } from 'react';
 import axios from 'axios';
 import AdminMain from './admin/AdminMain';
 import GeneralItemManage from './admin/GeneralItemManage';
-import CurriculumManage from './admin/CurriculumManage';
+import CurriculumManage from './admin/curriculum/CurriculumManage';
 import UserManage from './admin/UserManage';
 import TimetableManage from './admin/TimetableManage';
 import ReportManage from './admin/ReportManage';
