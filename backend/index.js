@@ -38,6 +38,7 @@ const swaggerSpec = swaggerJSDoc({
 const app = express();
 const PORT = 4000;
 
+
 // 5. 미들웨어/라우트 선언
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(cors());
@@ -50,6 +51,8 @@ app.use('/api/record-title', require('./recordTitleRoute'));
 // batchUpsertRoute 등록
 const batchUpsertRoute = require('./batchUpsertRoute');
 batchUpsertRoute(app, pool);
+// surveyBatchUpsertRoute 등록
+app.use('/api/survey', require('./surveyBatchUpsertRoute'));
 
 /**
  * @swagger

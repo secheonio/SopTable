@@ -6,6 +6,8 @@ import axios from 'axios';
 import AdminMain from './admin/AdminMain';
 import GeneralItemManage from './admin/GeneralItemManage';
 import CurriculumManage from './admin/curriculum/CurriculumManage';
+import SurveyPage from './admin/curriculum/SurveyPage';
+import PlanPage from './admin/curriculum/PlanPage';
 import UserManage from './admin/UserManage';
 import TimetableManage from './admin/TimetableManage';
 import ReportManage from './admin/ReportManage';
@@ -115,6 +117,8 @@ function App() {
             </div>} />
             <Route path="general" element={<GeneralItemManage />} />
             <Route path="curriculum" element={<CurriculumManage />} />
+            <Route path="curriculum/survey" element={<SurveyPage />} />
+            <Route path="curriculum/plan" element={<PlanPage />} />
             <Route path="user" element={<UserManage />} />
             <Route path="timetable" element={<TimetableManage />} />
             <Route path="report" element={<ReportManage />} />

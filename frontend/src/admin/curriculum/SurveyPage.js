@@ -1,10 +1,65 @@
-import React, { useRef, useState } from 'react';
+
+import React, { useRef, useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import axios from 'axios';
 
 export default function SurveyPage() {
+  const [editIdx, setEditIdx] = useState(null);
+  const [editRow, setEditRow] = useState(null);
+
+  // 수정 버튼 클릭
+  const handleEdit = idx => {
+    setEditIdx(idx);
+    setEditRow({ ...tableData[idx] });
+  };
+
+  // 편집 중 입력값 변경
+  const handleEditChange = (e, col) => {
+    setEditRow(prev => ({ ...prev, [col]: e.target.value }));
+  };
+
+  // 편집 저장 (DB 반영)
+  const handleEditSave = async idx => {
+    const newData = tableData.map((row, i) => i === idx ? editRow : row);
+    try {
+      await axios.post('http://localhost:4000/api/survey/batch-upsert', { survey: newData });
+      setTableData(newData);
+      setEditIdx(null);
+      setEditRow(null);
+      alert('수정 내용이 저장되었습니다.');
+    } catch (err) {
+      alert('저장 중 오류 발생: ' + (err?.response?.data?.message || err.message || err));
+    }
+  };
+
+  // 편집 취소
+  const handleEditCancel = () => {
+    setEditIdx(null);
+    setEditRow(null);
+  };
+  // 저장 기능 (DB 반영)
+  const handleSave = async () => {
+    try {
+      await axios.post('http://localhost:4000/api/survey/batch-upsert', { survey: tableData });
+      alert('전체 데이터가 DB에 저장되었습니다.');
+    } catch (err) {
+      alert('저장 중 오류 발생: ' + (err?.response?.data?.message || err.message || err));
+    }
+  };
   const [tableData, setTableData] = useState([
     { col1: '', col2: '', col3: '', col4: '', col5: '', col6: '', col7: '', col8: '', col9: '', col10: '', col11: '' }
   ]);
+
+  // 마운트 시 DB에서 데이터 불러오기
+  useEffect(() => {
+    axios.get('http://localhost:4000/api/survey')
+      .then(res => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setTableData(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
   const fileInputRef = useRef();
 
   // 엑셀에서 불러오기
@@ -27,6 +82,10 @@ export default function SurveyPage() {
     reader.readAsArrayBuffer(file);
   };
 
+  // 행 삭제
+  const handleDeleteRow = idx => {
+    setTableData(prev => prev.length === 1 ? [{ col1: '', col2: '', col3: '', col4: '', col5: '', col6: '', col7: '', col8: '', col9: '', col10: '', col11: '' }] : prev.filter((_, i) => i !== idx));
+  };
   // 엑셀로 내보내기
   const handleExportExcel = () => {
     const header = [
@@ -62,6 +121,7 @@ export default function SurveyPage() {
           <button onClick={() => fileInputRef.current.click()} style={{ padding: '6px 16px', borderRadius: 4, border: '1px solid #1976d2', background: '#1976d2', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.95rem' }}>엑셀에서 불러오기</button>
           <input type="file" accept=".xlsx,.xls" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportExcel} />
           <button onClick={handleExportExcel} style={{ padding: '6px 16px', borderRadius: 4, border: '1px solid #1976d2', background: '#fff', color: '#1976d2', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.95rem' }}>엑셀로 내보내기</button>
+          <button onClick={handleSave} style={{ padding: '6px 16px', borderRadius: 4, border: '1px solid #388e3c', background: '#388e3c', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.95rem' }}>저장</button>
         </div>
         <div>
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
@@ -96,21 +156,44 @@ export default function SurveyPage() {
             <tbody>
               {tableData.map((row, idx) => (
                 <tr key={idx}>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col1}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col2}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col3}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col4}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col5}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col6}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col7}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col8}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col9}</td>
-                  <td style={{ border: '1px solid #aaa', padding: 6, textAlign: 'center' }}>
-                    <button style={{ padding: '2px 6px', borderRadius: 3, border: '1px solid #1976d2', background: '#fff', color: '#1976d2', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>수정</button>
-                  </td>
-                  <td style={{ border: '1px solid #aaa', padding: 6, textAlign: 'center' }}>
-                    <button style={{ padding: '2px 6px', borderRadius: 3, border: '1px solid #d32f2f', background: '#fff', color: '#d32f2f', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>삭제</button>
-                  </td>
+                  {editIdx === idx ? (
+                    <>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col1} onChange={e => handleEditChange(e, 'col1')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col2} onChange={e => handleEditChange(e, 'col2')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col3} onChange={e => handleEditChange(e, 'col3')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col4} onChange={e => handleEditChange(e, 'col4')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col5} onChange={e => handleEditChange(e, 'col5')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col6} onChange={e => handleEditChange(e, 'col6')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col7} onChange={e => handleEditChange(e, 'col7')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col8} onChange={e => handleEditChange(e, 'col8')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}><input value={editRow.col9} onChange={e => handleEditChange(e, 'col9')} style={{ width: '100%' }} /></td>
+                      <td style={{ border: '1px solid #aaa', padding: 6, textAlign: 'center' }}>
+                        <button onClick={() => handleEditSave(idx)} style={{ padding: '2px 6px', borderRadius: 3, border: '1px solid #388e3c', background: '#388e3c', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1, marginRight: 2 }}>저장</button>
+                        <button onClick={handleEditCancel} style={{ padding: '2px 6px', borderRadius: 3, border: '1px solid #aaa', background: '#fff', color: '#888', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>취소</button>
+                      </td>
+                      <td style={{ border: '1px solid #aaa', padding: 6, textAlign: 'center' }}>
+                        <button onClick={() => handleDeleteRow(idx)} style={{ padding: '2px 6px', borderRadius: 3, border: '1px solid #d32f2f', background: '#fff', color: '#d32f2f', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>삭제</button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col1}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col2}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col3}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col4}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col5}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col6}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col7}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col8}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6 }}>{row.col9}</td>
+                      <td style={{ border: '1px solid #aaa', padding: 6, textAlign: 'center' }}>
+                        <button onClick={() => handleEdit(idx)} style={{ padding: '2px 6px', borderRadius: 3, border: '1px solid #1976d2', background: '#fff', color: '#1976d2', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>수정</button>
+                      </td>
+                      <td style={{ border: '1px solid #aaa', padding: 6, textAlign: 'center' }}>
+                        <button onClick={() => handleDeleteRow(idx)} style={{ padding: '2px 6px', borderRadius: 3, border: '1px solid #d32f2f', background: '#fff', color: '#d32f2f', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>삭제</button>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
