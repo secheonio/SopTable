@@ -294,6 +294,45 @@ function UserManage() {
                 </div>
                 {/* 오른쪽: 신규등록/저장/엑셀 버튼 */}
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {/* 저장 버튼: 현재 데이터 전체를 DB에 업데이트 */}
+                    <button
+                        style={{ background: '#e6ffe6', color: '#207520', border: '1px solid #4caf50', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 8, cursor: 'pointer' }}
+                        onClick={async () => {
+                            if (!users.length) {
+                                alert('저장할 데이터가 없습니다.');
+                                return;
+                            }
+                            try {
+                                // created_at 필드 보정
+                                const today = new Date();
+                                const yyyy = today.getFullYear();
+                                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                                const dd = String(today.getDate()).padStart(2, '0');
+                                const usersToSave = users.map(u => ({
+                                    ...u,
+                                    created_at: u.created_at || `${yyyy}-${mm}-${dd}`
+                                }));
+                                // 일괄 저장 API 호출
+                                await axios.post('http://localhost:4000/api/users/batch-upsert', { users: usersToSave });
+                                alert('전체 데이터가 DB에 저장되었습니다.');
+                                // 저장 표시 효과
+                                setSavedRows(() => {
+                                    const obj = {};
+                                    users.forEach((_, i) => { obj[i] = true; });
+                                    return obj;
+                                });
+                                setTimeout(() => {
+                                    setSavedRows({});
+                                }, 3000);
+                                // 편집모드 해제
+                                setEditingRows({});
+                                // 최신 데이터 fetch
+                                await fetchUsers();
+                            } catch (err) {
+                                alert('저장 중 오류 발생: ' + (err?.response?.data?.message || err.message || err));
+                            }
+                        }}
+                    >저장</button>
                     <label style={{ background: '#e6f0ff', color: '#205080', border: '1px solid #1976d2', borderRadius: 6, padding: '6px 18px', fontWeight: 'bold', marginRight: 8, cursor: excelLoading ? 'wait' : 'pointer', display: 'inline-block', opacity: excelLoading ? 0.6 : 1 }}>
                         {excelLoading ? '업로드 중...' : '엑셀에서 업로드'}
                         <input
@@ -321,7 +360,8 @@ function UserManage() {
                     </thead>
                     <tbody>
                         {filtered.map((user, idx) => {
-                            const userIndex = users.findIndex(u => u === user);
+                            // userIndex를 항상 users 배열에서 id(혹은 temp id)로 찾음
+                            const userIndex = users.findIndex(u => (u.id !== undefined && u.id === user.id));
                             return (
                                 <tr key={user.id || 'new-' + idx} style={savedRows[userIndex] ? { background: '#e0ffe0', transition: 'background 0.5s' } : {}}>
                                     {columns.map((col, i) => (
@@ -339,9 +379,13 @@ function UserManage() {
                                                 value={user[col.key] || ''}
                                                 onChange={e => {
                                                     const value = e.target.value;
-                                                    setUsers(users => users.map((u, idx) =>
-                                                        idx === userIndex ? { ...u, [col.key]: value } : u
-                                                    ));
+                                                    setUsers(users => {
+                                                        const idx = users.findIndex(u => u.id === user.id);
+                                                        if (idx === -1) return users;
+                                                        const updated = [...users];
+                                                        updated[idx] = { ...updated[idx], [col.key]: value };
+                                                        return updated;
+                                                    });
                                                 }}
                                                 style={{
                                                     width: '100%',
